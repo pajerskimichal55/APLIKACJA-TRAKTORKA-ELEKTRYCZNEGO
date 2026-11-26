@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="pl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Symulator elektrycznego traktorka-kosiarki</title>
+<style>
+:root{--bg:#f4f3ee;--card:#fff;--tx:#1f2a1c;--mut:#667060;--bd:#d9d8cf;--ac:#2f7d32;--warn:#c62828;--ok:#2e7d32;--c1:#8d6e63;--c2:#1e88e5;--c3:#fb8c00;--ac-bg:rgba(47,125,50,.14);--ac-hov:rgba(47,125,50,.08);--bad-bg:rgba(198,40,40,.14);--bad-bd:rgba(198,40,40,.45)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#161a15;--card:#20261e;--tx:#e8ece4;--mut:#9aa594;--bd:#363e33;--ac:#66bb6a;--warn:#ef5350;--ok:#66bb6a;--ac-bg:rgba(102,187,106,.18);--ac-hov:rgba(102,187,106,.10);--bad-bg:rgba(239,83,80,.20);--bad-bd:rgba(239,83,80,.55)}}
+:root[data-theme="dark"]{--bg:#161a15;--card:#20261e;--tx:#e8ece4;--mut:#9aa594;--bd:#363e33;--ac:#66bb6a;--warn:#ef5350;--ok:#66bb6a;--ac-bg:rgba(102,187,106,.18);--ac-hov:rgba(102,187,106,.10);--bad-bg:rgba(239,83,80,.20);--bad-bd:rgba(239,83,80,.55)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.38 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
+main{max-width:1680px;margin:0 auto;padding:10px 14px}
+h2{font-size:.94rem;margin:0 0 7px}h3{font-size:.88rem;margin:0 0 6px}
+.grid{display:grid;grid-template-columns:390px 1fr;gap:12px;align-items:start}
+.row-res{display:grid;grid-template-columns:1.35fr 1fr;gap:12px;align-items:start}
+.row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.row-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.row-3-tbl{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-items:start}
+@media(max-width:1360px){.row-3-tbl{grid-template-columns:1fr}}
+@media(max-width:1240px){.row-res,.row-2{grid-template-columns:1fr}}
+@media(max-width:960px){.grid{grid-template-columns:1fr}}
+@media(max-width:600px){.row-3{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;margin-bottom:12px}
+.row-res .card,.row-3-tbl .card{height:calc(100% - 12px)}
+label{display:block;font-size:.79rem;color:var(--mut);margin:7px 0 2px}
+label.ck{display:flex;gap:8px;align-items:center;color:var(--tx);margin:0 0 7px;cursor:pointer;font-size:.88rem;font-weight:500}
+input[type=number],select{width:100%;padding:5px 8px;border:1px solid var(--bd);border-radius:7px;background:var(--bg);color:var(--tx);font:inherit}
+input[type=range]{width:100%;accent-color:var(--ac);cursor:pointer;margin:2px 0}
+canvas{width:100%;height:175px;border-radius:8px;display:block;background:var(--bg)}
+.big{display:grid;grid-template-columns:repeat(auto-fit,minmax(128px,1fr));gap:6px}
+.k,.m-box{background:var(--bg);border:1px solid var(--bd);border-radius:7px;padding:6px 9px}
+.k small,.m-box small{color:var(--mut);display:block;font-size:.72rem}
+.k b{font-size:1rem}.m-box b{font-size:.96rem;display:block}
+.m-box span{font-size:.74rem;color:var(--mut);display:block;line-height:1.28}
+.motors{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.use-wrap{margin:0 0 9px;font-size:.84rem}
+.use{height:12px;border-radius:6px;background:var(--bg);border:1px solid var(--bd);overflow:hidden;margin-top:4px}
+.use div{height:100%;background:var(--ac);transition:width .2s,background .2s}
+.bar{display:flex;height:16px;border-radius:6px;overflow:hidden;background:var(--bg);border:1px solid var(--bd);margin:5px 0}
+.leg,.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:.77rem;color:var(--mut);margin:5px 0 0}
+.leg i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px}
+.msg{padding:6px 8px;border-radius:7px;margin-top:7px;font-size:.8rem;border:1px solid var(--bd);background:var(--bg)}
+.msg.bad{border-color:var(--warn);background:var(--bad-bg);color:var(--warn)}
+.msg.good{border-color:var(--ok);color:var(--ok)}
+.note{margin:4px 0 0;font-size:.76rem;color:var(--mut)}.note a{color:var(--ac);text-decoration:none;font-weight:500}
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.79rem}
+th,td{padding:4px 6px;border-bottom:1px solid var(--bd);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+th{color:var(--mut);font-weight:600}
+tbody tr{cursor:pointer;transition:.15s}tbody tr:hover{background:var(--ac-hov)}
+tbody tr.active{background:var(--ac-bg);font-weight:600}
+tbody tr.locked{opacity:.42;cursor:not-allowed}tbody tr.locked:hover{background:transparent}
+tbody tr.warn-row{color:var(--warn)}
+tbody tr.warn-row.active{background:var(--bad-bg)}
+table.gmat th.c,table.gmat td.c{text-align:center;padding:4px 3px;min-width:26px}
+td.g-ok,.legend b.ok{color:var(--ok);font-weight:600}
+td.g-no,.legend b.no{color:var(--warn);font-weight:700}
+td.g-no{background:var(--bad-bg)}
+table.gmat.no-mow td.g-no{background:transparent;opacity:.5}
+td.g-sel{outline:2px solid var(--ac);outline-offset:-2px;border-radius:3px;opacity:1!important}
+table.gmat:not(.no-mow) td.g-no.g-sel{outline-color:var(--warn)}
+table.ec-tbl th,table.ec-tbl td{text-align:left}table.ec-tbl th:last-child,table.ec-tbl td:last-child{text-align:right}
+td.grp{background:var(--card)!important;font-weight:600;cursor:default;border-right:1px solid var(--bd);vertical-align:middle}
+.cfg-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.cfg-head h2{margin:0}
+.btn-reset{padding:5px 10px;border:1px solid var(--bd);border-radius:7px;background:var(--bg);color:var(--tx);font:inherit;font-size:.79rem;font-weight:500;cursor:pointer}
+.btn-reset:hover{border-color:var(--ac);color:var(--ac)}
+.motor-col{background:var(--bg);border:1px solid var(--bd);border-radius:9px;padding:9px 11px}
+.motor-col input[type=number]{background:var(--card)}
+</style></head><body><main>
+<div class="grid">
+ <aside>
+  <div class="card">
+   <h2>Koszenie, bieg i prędkość</h2>
+   <label class="ck"><input type="checkbox" id="mow" checked> Koszenie (napęd noży włączony)</label>
+   <div class="tbl-wrap">
+    <table class="gmat" id="gmat">
+     <thead><tr><th>Stan trawy</th><th class="c">B1</th><th class="c">B2</th><th class="c">B3</th><th class="c">B4</th><th class="c">B5</th><th class="c">R</th></tr></thead>
+     <tbody id="grass-tbl"></tbody>
+    </table>
+   </div>
+   <p class="legend"><span><b class="ok">✓</b> – zalecane</span><span><b class="no">✕</b> – niezalecany przy koszeniu (można przetestować)</span></p>
+   <label style="margin-top:8px">Prędkość jazdy: <b id="vj-val"></b></label>
+   <input type="range" id="vj" min="0.1" max="1.6" step="any" value="1.5">
+   <p class="note" id="vj-max-note"></p>
+   <div id="gear-msg" class="msg"></div>
+  </div>
+  <div class="card"><h2>Podłoże, nachylenie i wiatr</h2>
+   <label>Rodzaj podłoża</label><select id="surf"></select>
+   <p class="note" id="surf-note"></p>
+   <label>Kąt nachylenia terenu: <b id="ang-val"></b></label>
+   <input type="range" id="angle" min="-10" max="10" step="0.5" value="0">
+   <label>Prędkość wiatru czołowego [m/s]</label>
+   <input type="number" id="wind" value="0" min="0" max="30" step="0.5">
+  </div>
+  <div class="card"><h2>Operator i masa</h2>
+   <label>Masa operatora [kg]</label>
+   <input type="number" id="m_operatora" value="85" min="0" step="1">
+   <p class="note" id="mass-info"></p>
+  </div>
+  <div class="card"><h2>Silniki w projekcie</h2>
+   <div class="motors">
+    <div class="m-box"><small>Silnik napędu kół</small><b id="sum-drive-p"></b><span id="sum-drive-spec"></span></div>
+    <div class="m-box"><small>Silnik napędu ostrzy</small><b id="sum-blade-p"></b><span id="sum-blade-spec"></span></div>
+   </div>
+   <p class="note"><a href="#motor-settings">Zmień parametry silników ↓</a></p>
+  </div>
+  <div class="card"><h2>Koła i opony (stałe projektu)</h2>
+   <div class="motors">
+    <div class="m-box"><small>Oś tylna (napędowa)</small><b>18×8,5-8"</b><span>Felga: 8" (203,2 mm)</span><span>Szer.: 8,5" (215,9 mm)</span><span>Średn.: 18" (457,2 mm)</span><span>Promień dyn.: 223,5 mm</span></div>
+    <div class="m-box"><small>Oś przednia (skrętna)</small><b>15×6-6"</b><span>Felga: 6" (152,4 mm)</span><span>Szer.: 6" (152,4 mm)</span><span>Średn.: 15" (381,0 mm)</span><span>Promień dyn.: 185,9 mm</span></div>
+   </div>
+  </div>
+ </aside>
+
+ <section>
+  <div class="card" style="padding:8px"><canvas id="cv" width="1100" height="175"></canvas></div>
+  <div class="row-res">
+   <div class="card">
+    <h2>Napęd jazdy – wyniki (silnik <span id="hdr-drive-p"></span> kW)</h2>
+    <div class="use-wrap">Obciążenie silnika kół (<span id="use-drive-p"></span> kW): <b id="drive-usep"></b><div class="use"><div id="drive-useb"></div></div></div>
+    <div class="big" id="drive-res"></div>
+    <h2 style="margin-top:9px">Struktura oporów jazdy</h2>
+    <div class="bar" id="res-bar"></div><div class="leg" id="res-leg"></div>
+    <div id="drive-msgs"></div>
+   </div>
+   <div class="card">
+    <h2>Napęd ostrzy – wyniki (silnik <span id="hdr-blade-p"></span> kW)</h2>
+    <div class="use-wrap">Obciążenie silnika ostrzy (<span id="use-blade-p"></span> kW): <b id="blade-usep"></b><div class="use"><div id="blade-useb"></div></div></div>
+    <div class="big" id="blade-res"></div>
+    <div id="blade-msgs"></div>
+   </div>
+  </div>
+
+  <div class="row-3-tbl">
+   <div class="card"><h2>Parametry skrzyni biegów</h2>
+    <div class="tbl-wrap"><table><thead><tr><th>Bieg</th><th>i<sub>b</sub></th><th>i<sub>c</sub></th><th>η<sub>c</sub></th><th>V<sub>maks</sub> (<span id="hdr-gear-rpm"></span>)</th></tr></thead><tbody id="gear-tbl"></tbody></table></div>
+   </div>
+   <div class="card"><h2>Wartości zależne od podłoża</h2>
+    <div class="tbl-wrap"><table><thead><tr><th>Podłoże</th><th>C<sub>rr0</sub></th><th>S<sub>w</sub></th><th>s</th></tr></thead><tbody id="surf-tbl"></tbody></table></div>
+   </div>
+   <div class="card"><h2>Jednostkowa energia cięcia</h2>
+    <div class="tbl-wrap"><table class="ec-tbl"><thead><tr><th colspan="2">Stan trawy</th><th>e<sub>c</sub> [J/m²]</th></tr></thead><tbody id="ec-tbl"></tbody></table></div>
+   </div>
+  </div>
+
+  <div class="card" id="motor-settings">
+   <div class="cfg-head"><h2>Parametry silników (ustawienia użytkownika)</h2><button type="button" class="btn-reset" id="reset-motors">Przywróć domyślne</button></div>
+   <div class="row-2">
+    <div class="motor-col"><h3>Silnik napędu kół (jazdy)</h3><div class="row-3">
+     <div><label for="in_p_kol">Moc [kW]</label><input type="number" id="in_p_kol" value="2.2" min="0.1" max="50" step="0.1"></div>
+     <div><label for="in_n_kol">Obroty [obr/min]</label><input type="number" id="in_n_kol" value="3000" min="100" max="15000" step="50"></div>
+     <div><label for="in_t_kol">Moment [Nm]</label><input type="number" id="in_t_kol" value="7" min="0.1" max="500" step="0.1"></div>
+    </div></div>
+    <div class="motor-col"><h3>Silnik napędu ostrzy (noży)</h3><div class="row-3">
+     <div><label for="in_p_nozy">Moc [kW]</label><input type="number" id="in_p_nozy" value="4.0" min="0.1" max="50" step="0.1"></div>
+     <div><label for="in_n_nozy">Obroty [obr/min]</label><input type="number" id="in_n_nozy" value="3000" min="100" max="15000" step="50"></div>
+     <div><label for="in_t_nozy">Moment [Nm]</label><input type="number" id="in_t_nozy" value="12.7" min="0.1" max="500" step="0.01"></div>
+    </div></div>
+   </div>
+   <p class="note">Zmiana parametrów od razu przelicza V<sub>maks</sub> na biegach, prędkość końcówek noży, obciążenie silników i komunikaty przekroczeń.</p>
+  </div>
+ </section>
+</div>
+
+<script>
+const C = {
+ m_pojazdu:180, A:1, g:9.81, k:0.96, rho:1.2, C_d:0.8, i_o:24.304, eta_p:0.95,
+ n_noza:3000, R_noza:0.23, D_noza:0.46, C_aero_noza:1.1, h_noza:0.01, k_p:1.25, eta_nap:0.95,
+ P_kol:2.2, n_kol:3000, T_kol:7, P_nozy:4.0, T_nozy:12.7
+};
+const wheel = (D,w,p) => { const Dm=D*25.4, wm=w*25.4, pm=p*25.4, Rm=Dm/2+C.k*(pm/2-Dm/2); return {w_mm:wm, R_m:Rm/1000}; };
+const WH = { przod:wheel(6,6,15), tyl:wheel(8,8.5,18) };
+const GEARS = [
+ {id:1,label:"Bieg 1",i_b:3.083,i_c:74.929,eta_c:.8246,rev:false},
+ {id:2,label:"Bieg 2",i_b:1.500,i_c:36.456,eta_c:.83505,rev:false},
+ {id:3,label:"Bieg 3",i_b:1.000,i_c:24.304,eta_c:.84455,rev:false},
+ {id:4,label:"Bieg 4",i_b:0.786,i_c:19.103,eta_c:.8398,rev:false},
+ {id:5,label:"Bieg 5",i_b:0.613,i_c:14.898,eta_c:.83505,rev:false},
+ {id:6,label:"Wsteczny",i_b:2.000,i_c:48.608,eta_c:.8025,rev:true}
+];
+const S = [
+ {name:"Trawa sucha, krótka",C_rr0:.07,s_w:.6,s:.05}, {name:"Trawa wysoka",C_rr0:.10,s_w:.8,s:.07},
+ {name:"Trawa mokra",C_rr0:.09,s_w:.8,s:.12}, {name:"Ubita ziemia / ścieżka",C_rr0:.04,s_w:.3,s:.04},
+ {name:"Żwir",C_rr0:.05,s_w:.5,s:.07}, {name:"Kostka / asfalt",C_rr0:.02,s_w:0,s:.02},
+ {name:"Miękkie, rozmokłe podłoże",C_rr0:.18,s_w:1,s:.18}
+];
+const GRASS = [
+ {grp:"Trawa sucha",lvl:"niska (3–4 cm)",short:"Sucha niska (3–4 cm)",name:"Trawa sucha niska (3–4 cm ścinania)",e_c:650,maxG:4,defS:0,okS:[0]},
+ {grp:"Trawa sucha",lvl:"średnia (6–8 cm)",short:"Sucha średnia (6–8 cm)",name:"Trawa sucha średnia (6–8 cm ścinania)",e_c:875,maxG:3,defS:0,okS:[0]},
+ {grp:"Trawa sucha",lvl:"wysoka (10–15 cm)",short:"Sucha wysoka (10–15 cm)",name:"Trawa sucha wysoka (10–15 cm ścinania)",e_c:1250,maxG:2,defS:1,okS:[1]},
+ {grp:"Trawa mokra",lvl:"niska (3–4 cm)",short:"Mokra niska (3–4 cm)",name:"Trawa mokra niska (3–4 cm ścinania)",e_c:910,maxG:2,defS:2,okS:[2,6]},
+ {grp:"Trawa mokra",lvl:"średnia (6–8 cm)",short:"Mokra średnia (6–8 cm)",name:"Trawa mokra średnia (6–8 cm ścinania)",e_c:1225,maxG:2,defS:2,okS:[2,6]},
+ {grp:"Trawa mokra",lvl:"wysoka (10–15 cm)",short:"Mokra długa (10–15 cm)",name:"Trawa mokra długa (10–15 cm ścinania)",e_c:1750,maxG:1,defS:2,okS:[2,6]}
+];
+const COL = ["#7cb342","#689f38","#558b2f","#8d6e63","#9e9e9e","#757575","#5d4037"];
+const $ = id => document.getElementById(id);
+const fmt = (n,d=2) => (d?n:Math.round(n)).toLocaleString("pl-PL",{minimumFractionDigits:d,maximumFractionDigits:d});
+const pos = (id,fb,min) => { const v=parseFloat($(id).value); return isFinite(v)&&v>=min?v:fb; };
+const getGear = id => GEARS.find(g=>g.id===id)||GEARS[0];
+const canMow = (gid,gr) => { const g=getGear(gid); return !g.rev && g.id<=gr.maxG; };
+
+$("surf").innerHTML = S.map((s,i)=>`<option value="${i}">${s.name}</option>`).join("");
+$("surf-tbl").innerHTML = S.map((s,i)=>`<tr data-i="${i}"><td>${s.name}</td><td>${fmt(s.C_rr0)}</td><td>${fmt(s.s_w,1)}</td><td>${fmt(s.s)}</td></tr>`).join("");
+$("gear-tbl").innerHTML = GEARS.map(g=>`<tr data-b="${g.id}"><td>${g.label}</td><td>${fmt(g.i_b,3)}</td><td>${fmt(g.i_c,3)}</td><td>${fmt(g.eta_c,4)}</td><td id="gvmax-${g.id}">–</td></tr>`).join("");
+$("grass-tbl").innerHTML = GRASS.map((g,i)=>`<tr data-i="${i}" title="${g.name}"><td>${g.short}</td>${GEARS.map(gr=>{const ok=canMow(gr.id,g);return`<td class="c ${ok?"g-ok":"g-no"}" data-b="${gr.id}" title="${gr.label}: ${ok?"koszenie zalecane":"bieg niezalecany (kliknij, aby przetestować)"}">${ok?"✓":"✕"}</td>`;}).join("")}</tr>`).join("");
+$("ec-tbl").innerHTML = GRASS.map((g,i)=>{const f=i===0||GRASS[i-1].grp!==g.grp;return`<tr data-i="${i}">${f?`<td class="grp" rowspan="${GRASS.filter(x=>x.grp===g.grp).length}">${g.grp}</td>`:""}<td>${g.lvl}</td><td>${fmt(g.e_c,0)}</td></tr>`;}).join("");
+
+let st = {rot:0,off:0,ang:0,angDeg:0,v:1.5,wind:0,R:WH.tyl.R_m,s:0,grass:0,gear:1,rev:false,mow:true,bladeKW:0};
+
+$("gear-tbl").onclick = e => { const r=e.target.closest("[data-b]"); if(r){st.gear=+r.dataset.b; updateUI();} };
+$("grass-tbl").onclick = e => { const r=e.target.closest("tr[data-i]"); if(!r) return; st.grass=+r.dataset.i; const td=e.target.closest("td[data-b]"); if(td) st.gear=+td.dataset.b; updateUI(); };
+$("ec-tbl").onclick = e => { if(e.target.closest("td.grp")) return; const r=e.target.closest("tr[data-i]"); if(r){st.grass=+r.dataset.i; updateUI();} };
+$("surf-tbl").onclick = e => { const r=e.target.closest("tr[data-i]"); if(r&&!r.classList.contains("locked")){$("surf").value=r.dataset.i; updateUI();} };
+$("reset-motors").onclick = () => { Object.entries({in_p_kol:C.P_kol,in_n_kol:C.n_kol,in_t_kol:C.T_kol,in_p_nozy:C.P_nozy.toFixed(1),in_n_nozy:C.n_noza,in_t_nozy:C.T_nozy}).forEach(([k,v])=>$(k).value=v); updateUI(); };
+document.querySelectorAll("input,select").forEach(el=>{ el.oninput = el.onchange = () => updateUI(); });
+
+function updateUI(){
+ const mCfg = {P_kol:pos("in_p_kol",C.P_kol,.1),n_kol:pos("in_n_kol",C.n_kol,100),T_kol:pos("in_t_kol",C.T_kol,.1),P_nozy:pos("in_p_nozy",C.P_nozy,.1),n_noza:pos("in_n_nozy",C.n_noza,100),T_nozy:pos("in_t_nozy",C.T_nozy,.1)};
+ const gi = st.grass, mow = $("mow").checked, gr = GRASS[gi];
+
+ $("sum-drive-p").textContent = `${fmt(mCfg.P_kol,1)} kW`;
+ $("sum-drive-spec").textContent = `maks. ${fmt(mCfg.n_kol,0)} obr/min • ${fmt(mCfg.T_kol,1)} Nm`;
+ $("sum-blade-p").textContent = `${fmt(mCfg.P_nozy,1)} kW`;
+ $("sum-blade-spec").textContent = `${fmt(mCfg.n_noza,0)} obr/min • ${fmt(mCfg.T_nozy,2)} Nm • 2 noże`;
+ $("hdr-drive-p").textContent = $("use-drive-p").textContent = fmt(mCfg.P_kol,1);
+ $("hdr-blade-p").textContent = $("use-blade-p").textContent = fmt(mCfg.P_nozy,1);
+ $("hdr-gear-rpm").textContent = fmt(mCfg.n_kol,0);
+ $("gmat").classList.toggle("no-mow", !mow);
+
+ const surfSel = $("surf"); let si = +surfSel.value;
+ if(mow){
+  if(!gr.okS.includes(si)) surfSel.value = si = gr.defS;
+  [...surfSel.options].forEach((o,i)=>o.disabled=!gr.okS.includes(i));
+  $("surf-note").textContent = gr.okS.length>1?"Podłoże dobrane do mokrej trawy (możesz wybrać rozmokłe podłoże).":"Podłoże dobrane automatycznie do wybranego stanu trawy.";
+ } else {
+  [...surfSel.options].forEach(o=>o.disabled=false);
+  $("surf-note").textContent = "Koszenie wyłączone – dostępne wszystkie podłoża.";
+ }
+
+ const sp = S[si], ag = getGear(st.gear), vMap = {};
+ GEARS.forEach(g=>{ const ms=(mCfg.n_kol*2*Math.PI*WH.tyl.R_m)/(60*g.i_c)*(1-sp.s); vMap[g.id]={ms,kmh:ms*3.6}; $(`gvmax-${g.id}`).textContent=`${fmt(ms*3.6)} km/h`; });
+
+ const vMax = vMap[ag.id], vj = $("vj"), minK = Math.min(0.1,vMax.kmh);
+ vj.min = minK.toFixed(4); vj.max = vMax.kmh.toFixed(6);
+ const kmh = Math.min(Math.max(parseFloat(vj.value)||minK, minK), vMax.kmh);
+ vj.value = kmh.toFixed(6);
+
+ // Obliczenia jazdy
+ const m = C.m_pojazdu + Math.max(+$("m_operatora").value||0,0);
+ const CrrT = sp.C_rr0*Math.pow(200/WH.tyl.w_mm,.4*sp.s_w), CrrP = sp.C_rr0*Math.pow(200/WH.przod.w_mm,.4*sp.s_w);
+ const angDeg = +$("angle").value, alpha = angDeg*Math.PI/180, V = Math.min(kmh/3.6,vMax.ms), Vw = Math.max(+$("wind").value||0,0);
+ const Fr = C.g*Math.cos(alpha)*m*(.6*CrrT+.4*CrrP), Fs = m*C.g*Math.sin(alpha), Fa = .5*C.rho*C.C_d*C.A*(V+Vw)**2, F = Fr+Fs+Fa;
+ const Vteor = V/(1-sp.s), nSil = Math.min((Vteor/WH.tyl.R_m)*(60/(2*Math.PI))*ag.i_c, mCfg.n_kol);
+ const Tm = (F*WH.tyl.R_m)/(ag.i_c*ag.eta_c), PmechKW = (F*Vteor)/C.eta_p/1000;
+
+ // Obliczenia ostrzy
+ const om = mow?(Math.PI*mCfg.n_noza)/30:0, vs = mow?(Math.PI*C.D_noza*mCfg.n_noza)/60:0;
+ const Pcut = mow?gr.e_c*V*C.D_noza:0, Paero = mow?.25*C.rho*C.C_aero_noza*C.h_noza*om**3*C.R_noza**4:0;
+ const PblKW = mow?(C.k_p*2*(Pcut+Paero))/C.eta_nap/1000:0, Tbl = mow?(PblKW*1000)/om:0;
+
+ $("vj-val").textContent = `${fmt(kmh)} km/h (${fmt(V)} m/s)`;
+ $("vj-max-note").textContent = `Maks. na ${ag.label} (${fmt(mCfg.n_kol,0)} obr/min): ${fmt(vMax.kmh)} km/h (${fmt(vMax.ms)} m/s)`;
+ $("ang-val").textContent = `${fmt(angDeg,1)}°`;
+ $("mass-info").textContent = `Masa własna: ${C.m_pojazdu} kg • Masa całkowita: ${fmt(m,0)} kg`;
+
+ document.querySelectorAll("#surf-tbl tr").forEach(tr=>{const i=+tr.dataset.i,l=mow&&!gr.okS.includes(i);tr.classList.toggle("active",i===si);tr.classList.toggle("locked",l);});
+ document.querySelectorAll("#gear-tbl tr").forEach(tr=>{const b=+tr.dataset.b;tr.classList.toggle("active",b===st.gear);tr.classList.toggle("warn-row",mow&&!canMow(b,gr));});
+ document.querySelectorAll("#grass-tbl tr").forEach(tr=>{const a=+tr.dataset.i===gi;tr.classList.toggle("active",a);tr.querySelectorAll("td[data-b]").forEach(td=>td.classList.toggle("g-sel",a&&+td.dataset.b===st.gear));});
+ document.querySelectorAll("#ec-tbl tr").forEach(tr=>tr.classList.toggle("active",+tr.dataset.i===gi));
+
+ const gmEl = $("gear-msg"), al = gr.maxG===1?"tylko Bieg 1":"Bieg 1–"+gr.maxG;
+ if(mow && !canMow(st.gear,gr)){
+  gmEl.className = "msg bad";
+  gmEl.textContent = ag.rev
+   ? `Uwaga: wybrano bieg wsteczny z włączonym koszeniem! Zalecane: wyłącz noże lub wybierz bieg do przodu (${al}).`
+   : `Uwaga: ${ag.label} jest niezalecany do koszenia dla „${gr.name}” (zalecane: ${al}).`;
+ } else if(mow){
+  gmEl.className = "msg good";
+  gmEl.textContent = `Koszenie aktywne (${ag.label}; zalecane dla tej trawy: ${al}, wsteczny niezalecany).`;
+ } else {
+  gmEl.className = "msg";
+  gmEl.textContent = `Jazda bez koszenia (${ag.label}) – dostępne wszystkie biegi.`;
+ }
+
+ const renderKPI = (el,arr) => $(el).innerHTML = arr.map(([l,v])=>`<div class="k"><small>${l}</small><b>${v}</b></div>`).join("");
+ renderKPI("drive-res",[
+  ["Moc mechaniczna",fmt(PmechKW)+" kW"],["Moment silnika",fmt(Tm)+" Nm"],["Obroty silnika",fmt(nSil,0)+" obr/min"],
+  ["V maks. na biegu",fmt(vMax.kmh)+" km/h"],["Siła napędowa",fmt(F,1)+" N"],["Opór toczenia",fmt(Fr,1)+" N"],
+  ["Opór wzniesienia",fmt(Fs,1)+" N"],["Opór powietrza",fmt(Fa,1)+" N"],["Prędkość teor.",fmt(Vteor)+" m/s"],
+  ["C_rr tył / przód",`${fmt(CrrT,3)} / ${fmt(CrrP,3)}`],["i_c / η_c",`${fmt(ag.i_c,3)} / ${fmt(ag.eta_c,4)}`]
+ ]);
+ const dPct = Math.max(PmechKW,0)/mCfg.P_kol*100;
+ $("drive-usep").textContent = `${fmt(dPct,0)} % (${fmt(Math.max(PmechKW,0))} / ${fmt(mCfg.P_kol,1)} kW)`;
+ $("drive-useb").style.width = Math.min(Math.max(dPct,0),100)+"%";
+ $("drive-useb").style.background = dPct>100?"var(--warn)":"var(--ac)";
+
+ const pts = [["Toczenie",Math.max(Fr,0),"--c1"],["Wzniesienie",Math.max(Fs,0),"--c2"],["Powietrze",Math.max(Fa,0),"--c3"]];
+ const totF = pts.reduce((a,x)=>a+x[1],0)||1;
+ $("res-bar").innerHTML = pts.map(x=>`<div style="width:${x[1]/totF*100}%;background:var(${x[2]})"></div>`).join("");
+ $("res-leg").innerHTML = pts.map(x=>`<span><i style="background:var(${x[2]})"></i>${x[0]}: ${fmt(x[1],1)} N</span>`).join("");
+
+ const dMsgs = [];
+ if(F<0) dMsgs.push(["good",`Zjazd z górki: siła ujemna (${fmt(F,1)} N) – wymagane hamowanie.`]);
+ if(PmechKW>mCfg.P_kol) dMsgs.push(["bad",`Przekroczono moc silnika jazdy (${fmt(PmechKW)} > ${fmt(mCfg.P_kol,1)} kW)! Zmniejsz prędkość lub kąt.`]);
+ if(Math.abs(Tm)>mCfg.T_kol) dMsgs.push(["bad",`Przekroczono moment silnika jazdy (${fmt(Math.abs(Tm))} > ${fmt(mCfg.T_kol,1)} Nm)! Zredukuj bieg.`]);
+ if(!dMsgs.length||dMsgs.every(x=>x[0]==="good")) dMsgs.push(["good",`Parametry w normie (${fmt(mCfg.P_kol,1)} kW, ${fmt(mCfg.T_kol,1)} Nm, ≤ ${fmt(mCfg.n_kol,0)} obr/min).`]);
+ $("drive-msgs").innerHTML = dMsgs.map(([t,m])=>`<div class="msg ${t}">${m}</div>`).join("");
+
+ renderKPI("blade-res",[
+  ["Prędkość kątowa",mow?fmt(om)+" rad/s":"0 rad/s"],["Prędkość końcówki",mow?fmt(vs)+" m/s":"0 m/s"],
+  ["Moc cięcia (1 nóż)",fmt(Pcut,0)+" W"],["Opory aero (1 nóż)",fmt(Paero,0)+" W"],
+  ["Moc całkowita ostrzy",fmt(PblKW)+" kW"],["Moment na wale",fmt(Tbl)+" Nm"]
+ ]);
+ const bPct = PblKW/mCfg.P_nozy*100;
+ $("blade-usep").textContent = `${fmt(bPct,0)} % (${fmt(PblKW)} / ${fmt(mCfg.P_nozy,1)} kW)`;
+ $("blade-useb").style.width = Math.min(Math.max(bPct,0),100)+"%";
+ $("blade-useb").style.background = bPct>100?"var(--warn)":"var(--ac)";
+
+ const bMsgs = [];
+ if(!mow) bMsgs.push(["",`Napęd ostrzy wyłączony – silnik ${fmt(mCfg.P_nozy,1)} kW nie pobiera mocy.`]);
+ else {
+  if(PblKW>mCfg.P_nozy) bMsgs.push(["bad",`Przekroczono moc silnika noży (${fmt(PblKW)} > ${fmt(mCfg.P_nozy,1)} kW)! Zmniejsz prędkość jazdy.`]);
+  if(Tbl>mCfg.T_nozy) bMsgs.push(["bad",`Przekroczono moment silnika noży (${fmt(Tbl)} > ${fmt(mCfg.T_nozy)} Nm)! Zmniejsz prędkość.`]);
+  if(!bMsgs.length) bMsgs.push(["good",`Parametry w normie (zapas mocy: ${fmt(mCfg.P_nozy-PblKW)} kW).`]);
+ }
+ $("blade-msgs").innerHTML = bMsgs.map(([t,m])=>`<div class="msg ${t}">${m}</div>`).join("");
+
+ Object.assign(st,{s:si,mow,rev:ag.rev,v:kmh,wind:Vw,ang:alpha,angDeg,bladeKW:PblKW});
+}
+
+const cv = $("cv"), c = cv.getContext("2d"); let windOff = 0;
+function draw(){
+ const cw = Math.round(cv.clientWidth)||900; if(cv.width!==cw) cv.width=cw;
+ const W = cv.width, H = cv.height, dark = matchMedia("(prefers-color-scheme:dark)").matches||document.documentElement.dataset.theme==="dark";
+ c.fillStyle = dark?"#2a3340":"#cfe8f7"; c.fillRect(0,0,W,H);
+
+ const dir = st.rev?-1:1;
+ st.off = ((st.off + dir*st.v*0.15)%50+50)%50;
+ st.rot += dir*st.v*0.00144/st.R;
+
+ if(st.wind>0){
+  windOff = (windOff+st.wind*.85)%140;
+  c.strokeStyle = dark?"rgba(255,255,255,.22)":"rgba(30,90,140,.22)"; c.lineWidth=2;
+  for(let y=28;y<95;y+=22) for(let x=-140;x<W+140;x+=140){ const wx=st.rev?x+windOff:W-x-windOff; c.beginPath(); c.moveTo(wx,y); c.lineTo(wx+34,y); c.stroke(); }
+ }
+
+ c.save(); c.translate(W/2,H*.82); c.rotate(-st.ang); c.scale(.76,.76);
+ c.fillStyle = COL[st.s]; c.fillRect(-W*1.5,0,W*3,H*1.5);
+ c.strokeStyle = "rgba(0,0,0,.25)"; c.lineWidth=3;
+ for(let x=-W-st.off;x<W;x+=50){ c.beginPath(); c.moveTo(x,8); c.lineTo(x-6,24); c.stroke(); }
+
+ c.fillStyle="rgba(0,0,0,.18)"; c.beginPath(); c.ellipse(10,3,130,5,0,0,7); c.fill();
+ const wheel2 = (x,r) => {
+  c.save(); c.translate(x,-r); c.rotate(st.rot);
+  c.fillStyle="#1c1c1c"; c.beginPath(); c.arc(0,0,r,0,7); c.fill();
+  c.fillStyle="#3a3a3a"; for(let i=0;i<18;i++){c.rotate(Math.PI/9);c.fillRect(r-4,-2,5,4);}
+  c.fillStyle="#b0bec5"; c.beginPath(); c.arc(0,0,r*.58,0,7); c.fill();
+  c.strokeStyle="#607d8b"; c.lineWidth=3; for(let i=0;i<5;i++){c.rotate(Math.PI*2/5);c.beginPath();c.moveTo(0,0);c.lineTo(r*.55,0);c.stroke();}
+  c.fillStyle="#455a64"; c.beginPath(); c.arc(0,0,r*.16,0,7); c.fill(); c.restore();
+ };
+
+ c.fillStyle="#37474f"; c.fillRect(-20,-52,8,22); c.fillRect(48,-52,8,22);
+ c.fillStyle="#546e7a"; c.fillRect(-32,-30,98,16); c.fillStyle="#263238"; c.fillRect(-32,-16,98,6);
+ if(st.mow){ c.fillStyle="rgba(255,235,59,.45)"; c.fillRect(-28,-13,90,2+(Math.sin(performance.now()/40)+1)*.75); }
+ c.fillStyle="#455a64"; c.fillRect(-96,-54,200,8);
+ wheel2(-70,38); wheel2(95,24);
+ c.strokeStyle="#b71c1c"; c.lineWidth=7; c.beginPath(); c.arc(-70,-38,45,Math.PI*1.06,Math.PI*1.94); c.stroke();
+ c.fillStyle="#d32f2f"; c.beginPath(); c.moveTo(14,-48); c.lineTo(14,-80); c.quadraticCurveTo(16,-90,30,-90); c.lineTo(88,-86); c.quadraticCurveTo(110,-82,116,-62); c.lineTo(118,-48); c.closePath(); c.fill();
+ c.fillStyle="rgba(255,255,255,.18)"; c.fillRect(20,-86,66,6);
+ c.fillStyle="#fff59d"; c.beginPath(); c.arc(112,-66,5,0,7); c.fill();
+ c.fillStyle="#fff"; c.font="18px system-ui"; c.fillText("⚡",48,-58);
+ c.fillStyle="#455a64"; c.fillRect(-72,-82,10,22);
+ c.fillStyle="#263238"; c.fillRect(-88,-92,42,10); c.beginPath(); c.moveTo(-88,-92); c.lineTo(-96,-132); c.lineTo(-88,-132); c.lineTo(-80,-92); c.closePath(); c.fill();
+ c.lineCap="round";
+ c.strokeStyle="#263238"; c.lineWidth=11; c.beginPath(); c.moveTo(-68,-96); c.lineTo(-28,-100); c.lineTo(-24,-62); c.stroke();
+ c.strokeStyle="#1565c0"; c.lineWidth=18; c.beginPath(); c.moveTo(-72,-98); c.lineTo(-80,-134); c.stroke();
+ c.lineWidth=7; c.beginPath(); c.moveTo(-68,-124); c.lineTo(2,-120); c.stroke();
+ c.fillStyle="#f1c27d"; c.beginPath(); c.arc(-78,-150,10,0,7); c.fill();
+ c.fillStyle="#111"; c.fillRect(-34,-62,20,8);
+ c.strokeStyle="#263238"; c.lineWidth=5; c.beginPath(); c.moveTo(44,-90); c.lineTo(2,-120); c.stroke();
+ c.lineWidth=4; c.beginPath(); c.ellipse(0,-122,16,4,-0.5,0,7); c.stroke(); c.lineCap="butt";
+ c.restore();
+
+ c.fillStyle = dark?"#e8ece4":"#1f2a1c"; c.font = "13px system-ui";
+ c.fillText(`${getGear(st.gear).label} • ${fmt(st.v)} km/h • ${fmt(st.angDeg,1)}°${st.wind>0?` • Wiatr ${fmt(st.wind,1)} m/s`:""} • ${st.mow?`Koszenie (${fmt(st.bladeKW)} kW)`:"Bez koszenia"}`,12,18);
+ requestAnimationFrame(draw);
+}
+
+$("surf").value = 0; updateUI(); draw();
+</script></main></body></html>
